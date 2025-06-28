@@ -453,42 +453,40 @@ def clean_special_chars(text):
     # Decode HTML entities
     text = html.unescape(text)
 
-    # Remove unwanted sections
+    # Remove unwanted headers and repeated sections
     text = re.sub(r'<h2>.*?(Response to User|Analysis|Summary|html).*?</h2>', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\b(Response\s*to\s*User|Analysis|Summary|html)\b', '', text, flags=re.IGNORECASE)
 
-    # Only preserve safe tags
+    # Only preserve allowed tags
     allowed_tags = ["p", "ul", "ol", "li", "b", "br"]
     tag_pattern = re.compile(r'</?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
 
     def preserve_tag(match):
         tag = match.group(1).lower()
         return match.group(0) if tag in allowed_tags else ''
-
     text = tag_pattern.sub(preserve_tag, text)
 
-    # Remove code blocks/backticks
+    # Remove backticks/code
     text = text.replace("```", "")
 
-    # 🔹 Fix glued words (smart spacing)
-    # Add space between lowercase→uppercase, letter→digit, digit→letter
+    # Insert space between lowercase-uppercase, letter-digit, digit-letter
     text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
     text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
     text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
 
-    # 🔹 Fix glued lowercase words using crude spacing (add space after each word-like group)
-    # Insert space between long glued lowercase words like: integrationrisksfromlargeacquisitions
-    text = re.sub(r'([a-z]{6,})(?=[A-Z])', r'\1 ', text)
-    text = re.sub(r'([a-z]{5,})([A-Z])', r'\1 \2', text)
+    # Space between glued lowercase words using brute force (detect long lowercase runs)
+    def split_lowercase_words(m):
+        word = m.group(1)
+        # Use a simple heuristic: try to break into common word pieces
+        chunks = re.findall(r'[a-z]{3,}', word)
+        return ' '.join(chunks)
 
-    # Optional: add space after punctuation (if stuck)
-    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
-    text = re.sub(r'([.,;:!?])([^\s])', r'\1 \2', text)
+    text = re.sub(r'\b([a-z]{15,})\b', split_lowercase_words, text)
 
-    # 🔹 Bullet points fix: ensure "-word" becomes "- word"
+    # Add space after hyphen if stuck (e.g., "-text" to "- text")
     text = re.sub(r'-([^\s])', r'- \1', text)
 
-    # Normalize excessive whitespace
+    # Normalize spacing
     text = re.sub(r'\s{2,}', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
 
