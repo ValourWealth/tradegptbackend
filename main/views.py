@@ -382,29 +382,58 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 
+# def clean_special_chars(text):
+#     # Remove markdown styling
+#     text = re.sub(r'\*\*\*(.*?)\*\*\*', r'\1', text)
+#     text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+#     text = re.sub(r'\*(.*?)\*', r'\1', text)
+#     text = re.sub(r'`{1,3}(.*?)`{1,3}', r'\1', text)
+#     # Remove markdown headings like ### 1. Tesla (TSLA) → just "1. Tesla (TSLA)"
+#     text = re.sub(r'^#{1,6}\s*(\d+\.\s?[A-Z].+)', r'\1', text, flags=re.MULTILINE)
+
+# # For all other headings, you can still keep optional formatting (or remove this too)
+#     text = re.sub(r'^#{1,6}\s*(.+)$', r'\n\n\1\n', text, flags=re.MULTILINE)
+
+
+#     # Replace headings (## Heading) with properly formatted section titles
+#     text = re.sub(r'^#{1,6}\s*(.+)$', r'\n\n### \1\n', text, flags=re.MULTILINE)
+
+#     # Remove markdown tables and separators
+#     text = re.sub(r'\|.*?\|', '', text)  # remove markdown table rows
+#     text = re.sub(r'-{3,}', '\n' + '-' * 20 + '\n', text)
+
+#     # Normalize spacing
+#     text = re.sub(r'\n{2,}', '\n\n', text)
+#     text = re.sub(r'\s{2,}', ' ', text)
+
+#     return text.strip()
+
 def clean_special_chars(text):
-    # Remove markdown styling
-    text = re.sub(r'\*\*\*(.*?)\*\*\*', r'\1', text)
-    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'`{1,3}(.*?)`{1,3}', r'\1', text)
-    # Remove markdown headings like ### 1. Tesla (TSLA) → just "1. Tesla (TSLA)"
-    text = re.sub(r'^#{1,6}\s*(\d+\.\s?[A-Z].+)', r'\1', text, flags=re.MULTILINE)
+    import html
 
-# For all other headings, you can still keep optional formatting (or remove this too)
-    text = re.sub(r'^#{1,6}\s*(.+)$', r'\n\n\1\n', text, flags=re.MULTILINE)
+    # 1. Decode HTML entities
+    text = html.unescape(text)
 
+    # 2. Only preserve safe tags
+    allowed_tags = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "li", "b", "br"]
+    tag_pattern = re.compile(r'<\/?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
 
-    # Replace headings (## Heading) with properly formatted section titles
-    text = re.sub(r'^#{1,6}\s*(.+)$', r'\n\n### \1\n', text, flags=re.MULTILINE)
+    def preserve_tag(match):
+        tag = match.group(1).lower()
+        return match.group(0) if tag in allowed_tags else ''
 
-    # Remove markdown tables and separators
-    text = re.sub(r'\|.*?\|', '', text)  # remove markdown table rows
-    text = re.sub(r'-{3,}', '\n' + '-' * 20 + '\n', text)
+    text = tag_pattern.sub(preserve_tag, text)
 
-    # Normalize spacing
-    text = re.sub(r'\n{2,}', '\n\n', text)
+    # 3. De-glue text like "Checkthedata" → "Check the data"
+    text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
+    text = re.sub(r'(?<=[a-zA-Z])(?=\d)', ' ', text)
+
+    # 4. Bullet fix: ensure "-point" → "- point"
+    text = re.sub(r'-([^\s])', r'- \1', text)
+
+    # 5. Normalize spacing
     text = re.sub(r'\s{2,}', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
 
     return text.strip()
 
