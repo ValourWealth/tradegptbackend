@@ -539,6 +539,10 @@ class DeepSeekChatView(APIView):
 
             # Build prompt
             if query_type == "price_chart":
+                prompt += """
+<p><b>Note:</b> Use clean HTML. Wrap each sentence in <p> or each list item in <li><p>...</p></li>. Avoid combining multiple sentences without punctuation or spacing.</p>
+"""
+
                 prompt = f"""
 You are TradeGPT, a financial data analyst. Respond in clean HTML format with structure and insights.
 
