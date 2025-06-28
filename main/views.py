@@ -408,15 +408,49 @@ logger = logging.getLogger(__name__)
 
 #     return text.strip()
 
+# def clean_special_chars(text):
+#     import html
+
+#     # 1. Decode HTML entities
+#     text = html.unescape(text)
+
+#     # 2. Only preserve safe tags
+#     allowed_tags = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "li", "b", "br"]
+#     tag_pattern = re.compile(r'<\/?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
+
+#     def preserve_tag(match):
+#         tag = match.group(1).lower()
+#         return match.group(0) if tag in allowed_tags else ''
+
+#     text = tag_pattern.sub(preserve_tag, text)
+
+#     # 3. De-glue text like "Checkthedata" → "Check the data"
+#     text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
+#     text = re.sub(r'(?<=[a-zA-Z])(?=\d)', ' ', text)
+
+#     # 4. Bullet fix: ensure "-point" → "- point"
+#     text = re.sub(r'-([^\s])', r'- \1', text)
+
+#     # 5. Normalize spacing
+#     text = re.sub(r'\s{2,}', ' ', text)
+#     text = re.sub(r'\n{3,}', '\n\n', text)
+
+#     return text.strip()
 def clean_special_chars(text):
     import html
 
-    # 1. Decode HTML entities
+    # Decode HTML entities
     text = html.unescape(text)
 
-    # 2. Only preserve safe tags
-    allowed_tags = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "li", "b", "br"]
-    tag_pattern = re.compile(r'<\/?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
+    # Remove unwanted sections
+    text = re.sub(r'<h2>.*?(Response to User|Analysis|Summary|html).*?</h2>', '', text, flags=re.IGNORECASE)
+
+    # Remove raw section titles
+    text = re.sub(r'\b(Response\s*to\s*User|Analysis|Summary|html)\b', '', text, flags=re.IGNORECASE)
+
+    # Only preserve safe tags
+    allowed_tags = ["p", "ul", "ol", "li", "b", "br"]
+    tag_pattern = re.compile(r'</?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
 
     def preserve_tag(match):
         tag = match.group(1).lower()
@@ -424,14 +458,17 @@ def clean_special_chars(text):
 
     text = tag_pattern.sub(preserve_tag, text)
 
-    # 3. De-glue text like "Checkthedata" → "Check the data"
-    text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
-    text = re.sub(r'(?<=[a-zA-Z])(?=\d)', ' ', text)
+    # Remove backticks
+    text = text.replace("```", "")
 
-    # 4. Bullet fix: ensure "-point" → "- point"
+    # De-glue stuck words
+    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+    text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
+
+    # Ensure hyphenated bullet points have space
     text = re.sub(r'-([^\s])', r'- \1', text)
 
-    # 5. Normalize spacing
+    # Normalize whitespace
     text = re.sub(r'\s{2,}', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
 
