@@ -43,7 +43,9 @@ ALLOWED_HOSTS = [
     "*",
     "valourwealthdjango-production.up.railway.app",
     "https://frontend-eight-rho-95.vercel.app", 
-    'https://backendoftradegpt-production.up.railway.app'
+    'https://backendoftradegpt-production.up.railway.app',
+    "https://tradegptlatest.vercel.app",
+    "https://backend-production-1e63.up.railway.app",
 ]
 
 # Application definition
@@ -157,6 +159,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",
     "https://backendoftradegpt-production.up.railway.app",
     "https://*.railway.app",
+    "https://tradegptlatest.vercel.app",
+    "https://backend-production-1e63.up.railway.app",
 ]
 
 
