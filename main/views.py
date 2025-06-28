@@ -411,12 +411,18 @@ logger = logging.getLogger(__name__)
 # def clean_special_chars(text):
 #     import html
 
-#     # 1. Decode HTML entities
+#     # Decode HTML entities
 #     text = html.unescape(text)
 
-#     # 2. Only preserve safe tags
-#     allowed_tags = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "li", "b", "br"]
-#     tag_pattern = re.compile(r'<\/?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
+#     # Remove unwanted sections
+#     text = re.sub(r'<h2>.*?(Response to User|Analysis|Summary|html).*?</h2>', '', text, flags=re.IGNORECASE)
+
+#     # Remove raw section titles
+#     text = re.sub(r'\b(Response\s*to\s*User|Analysis|Summary|html)\b', '', text, flags=re.IGNORECASE)
+
+#     # Only preserve safe tags
+#     allowed_tags = ["p", "ul", "ol", "li", "b", "br"]
+#     tag_pattern = re.compile(r'</?([a-z0-9]+)[^>]*>', flags=re.IGNORECASE)
 
 #     def preserve_tag(match):
 #         tag = match.group(1).lower()
@@ -424,28 +430,31 @@ logger = logging.getLogger(__name__)
 
 #     text = tag_pattern.sub(preserve_tag, text)
 
-#     # 3. De-glue text like "Checkthedata" → "Check the data"
-#     text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
-#     text = re.sub(r'(?<=[a-zA-Z])(?=\d)', ' ', text)
+#     # Remove backticks
+#     text = text.replace("```", "")
 
-#     # 4. Bullet fix: ensure "-point" → "- point"
+#     # De-glue stuck words
+#     text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+#     text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
+
+#     # Ensure hyphenated bullet points have space
 #     text = re.sub(r'-([^\s])', r'- \1', text)
 
-#     # 5. Normalize spacing
+#     # Normalize whitespace
 #     text = re.sub(r'\s{2,}', ' ', text)
 #     text = re.sub(r'\n{3,}', '\n\n', text)
 
 #     return text.strip()
+
 def clean_special_chars(text):
     import html
+    import re
 
     # Decode HTML entities
     text = html.unescape(text)
 
     # Remove unwanted sections
     text = re.sub(r'<h2>.*?(Response to User|Analysis|Summary|html).*?</h2>', '', text, flags=re.IGNORECASE)
-
-    # Remove raw section titles
     text = re.sub(r'\b(Response\s*to\s*User|Analysis|Summary|html)\b', '', text, flags=re.IGNORECASE)
 
     # Only preserve safe tags
@@ -458,17 +467,28 @@ def clean_special_chars(text):
 
     text = tag_pattern.sub(preserve_tag, text)
 
-    # Remove backticks
+    # Remove code blocks/backticks
     text = text.replace("```", "")
 
-    # De-glue stuck words
+    # 🔹 Fix glued words (smart spacing)
+    # Add space between lowercase→uppercase, letter→digit, digit→letter
     text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
     text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
+    text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
 
-    # Ensure hyphenated bullet points have space
+    # 🔹 Fix glued lowercase words using crude spacing (add space after each word-like group)
+    # Insert space between long glued lowercase words like: integrationrisksfromlargeacquisitions
+    text = re.sub(r'([a-z]{6,})(?=[A-Z])', r'\1 ', text)
+    text = re.sub(r'([a-z]{5,})([A-Z])', r'\1 \2', text)
+
+    # Optional: add space after punctuation (if stuck)
+    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+    text = re.sub(r'([.,;:!?])([^\s])', r'\1 \2', text)
+
+    # 🔹 Bullet points fix: ensure "-word" becomes "- word"
     text = re.sub(r'-([^\s])', r'- \1', text)
 
-    # Normalize whitespace
+    # Normalize excessive whitespace
     text = re.sub(r'\s{2,}', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
 
