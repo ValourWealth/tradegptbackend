@@ -46,7 +46,7 @@ ALLOWED_HOSTS = [
     'https://backendoftradegpt-production.up.railway.app',
     "https://tradegptlatest.vercel.app",
     "https://backend-production-1e63.up.railway.app",
-    "tradegptbackend-production.up.railway.app",
+    "https://tradegptbackend-production.up.railway.app",
 ]
 
 # Application definition
@@ -162,7 +162,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
     "https://tradegptlatest.vercel.app",
     "https://backend-production-1e63.up.railway.app",
-    "tradegptbackend-production.up.railway.app",
+    "https://tradegptbackend-production.up.railway.app",
     
 ]
 
@@ -179,7 +179,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://192.168.1.12:3000",
     "https://tradegptlatest.vercel.app",
     "https://backend-production-1e63.up.railway.app",
-    "tradegptbackend-production.up.railway.app",
+    "https://tradegptbackend-production.up.railway.app",
+
 ]
 CORS_ALLOW_CREDENTIALS = True
 
