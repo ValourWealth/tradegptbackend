@@ -161,6 +161,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
     "https://tradegptlatest.vercel.app",
     "https://backend-production-1e63.up.railway.app",
+    
 ]
 
 
@@ -174,6 +175,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://backendoftradegpt-production.up.railway.app",
     "http://127.0.0.1:8000",
     "https://192.168.1.12:3000",
+    "https://tradegptlatest.vercel.app",
+    "https://backend-production-1e63.up.railway.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
